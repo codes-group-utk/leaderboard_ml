@@ -82,9 +82,34 @@ button.secondary {
   background: #334e68;
 }
 
+button.small-btn {
+  padding: 7px 10px;
+  font-size: 0.84rem;
+}
+
 button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.upload-tools {
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: #f8fbfd;
+}
+
+.upload-tools .status {
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 table {

@@ -17,7 +17,10 @@
       <section class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
           <h2 style="margin:0;font-size:1.15rem;">Today's Cases</h2>
-          <button id="refresh-btn" class="secondary" type="button">Refresh</button>
+          <div class="btn-group">
+            <button id="download-inputs-btn" type="button">Download Inputs CSV</button>
+            <button id="refresh-btn" class="secondary" type="button">Refresh</button>
+          </div>
         </div>
         <p id="status" class="status">Loading...</p>
 
@@ -40,6 +43,18 @@
       <section class="card">
         <h2 style="margin-top:0;font-size:1.15rem;">Submit Prediction</h2>
         <form id="submission-form">
+          <div class="upload-tools">
+            <label for="prediction-file">Upload predictions CSV (optional)</label>
+            <div class="btn-group">
+              <input id="prediction-file" type="file" accept=".csv,text/csv" />
+              <button id="download-template-btn" class="secondary small-btn" type="button">
+                Download Template CSV
+              </button>
+            </div>
+            <small>Expected CSV columns: <span class="code">case_id,cl,cd</span></small>
+            <p id="file-status" class="status">No file loaded.</p>
+          </div>
+
           <div class="row">
             <div class="field">
               <label for="name">Name *</label>

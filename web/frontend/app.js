@@ -13,6 +13,10 @@ const els = {
   email: document.getElementById("email"),
   group: document.getElementById("group"),
   result: document.getElementById("result"),
+  downloadInputsBtn: document.getElementById("download-inputs-btn"),
+  predictionFile: document.getElementById("prediction-file"),
+  downloadTemplateBtn: document.getElementById("download-template-btn"),
+  fileStatus: document.getElementById("file-status"),
 };
 
 let currentDate = null;
@@ -22,6 +26,11 @@ let demoMode = false;
 function setStatus(message, kind = "") {
   els.status.className = `status ${kind}`.trim();
   els.status.textContent = message;
+}
+
+function setFileStatus(message, kind = "") {
+  els.fileStatus.className = `status ${kind}`.trim();
+  els.fileStatus.textContent = message;
 }
 
 function fmtNum(v, digits = 6) {
@@ -67,6 +76,7 @@ function enableDemoMode(reason = "") {
   setStatus(`Backend API is not connected. Showing local demo data${reasonMsg}.`, "error");
   els.result.className = "status";
   els.result.textContent = "Demo mode active: submissions are disabled until API is configured.";
+  setFileStatus("No file loaded.");
 }
 
 function coordPreview(coords) {
@@ -185,6 +195,207 @@ function collectPredictions() {
   return Array.from(map.values()).sort((a, b) => a.case_id - b.case_id);
 }
 
+function csvEscape(value) {
+  const str = String(value ?? "");
+  if (/[",\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function downloadCsv(filename, rows) {
+  const csvText = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadInputsCsv() {
+  if (!currentCases.length) {
+    setStatus("No cases loaded. Cannot download inputs yet.", "error");
+    return;
+  }
+
+  const rows = [
+    ["date", "case_id", "airfoil", "mach", "reynolds", "aoa", "coordinates_json"],
+  ];
+
+  for (const c of currentCases) {
+    rows.push([
+      currentDate || "",
+      c.case_id,
+      c.airfoil,
+      c.mach,
+      c.reynolds,
+      c.aoa,
+      JSON.stringify(c.coordinates || []),
+    ]);
+  }
+
+  const dateTag = currentDate || todayIsoDate();
+  downloadCsv(`benchmark_inputs_${dateTag}.csv`, rows);
+}
+
+function downloadTemplateCsv() {
+  if (!currentCases.length) {
+    setFileStatus("No cases loaded. Cannot generate template.", "error");
+    return;
+  }
+
+  const rows = [["case_id", "cl", "cd"]];
+  for (const c of currentCases) {
+    rows.push([c.case_id, "", ""]);
+  }
+
+  const dateTag = currentDate || todayIsoDate();
+  downloadCsv(`prediction_template_${dateTag}.csv`, rows);
+}
+
+function parseCsvLine(line) {
+  const out = [];
+  let token = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        token += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (ch === "," && !inQuotes) {
+      out.push(token.trim());
+      token = "";
+      continue;
+    }
+
+    token += ch;
+  }
+
+  out.push(token.trim());
+  return out;
+}
+
+function parsePredictionCsv(text) {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  if (!lines.length) {
+    throw new Error("Uploaded CSV is empty.");
+  }
+
+  const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase());
+  const required = ["case_id", "cl", "cd"];
+  for (const name of required) {
+    if (!header.includes(name)) {
+      throw new Error(`CSV must include header column: ${name}`);
+    }
+  }
+
+  const idxCase = header.indexOf("case_id");
+  const idxCl = header.indexOf("cl");
+  const idxCd = header.indexOf("cd");
+
+  const expectedCaseIds = new Set(currentCases.map((c) => Number(c.case_id)));
+  const seenCaseIds = new Set();
+  const parsed = [];
+
+  for (let i = 1; i < lines.length; i += 1) {
+    const row = parseCsvLine(lines[i]);
+    const caseIdRaw = row[idxCase];
+    const clRaw = row[idxCl];
+    const cdRaw = row[idxCd];
+
+    if (!caseIdRaw && !clRaw && !cdRaw) {
+      continue;
+    }
+
+    const caseId = Number(caseIdRaw);
+    const cl = Number(clRaw);
+    const cd = Number(cdRaw);
+
+    if (!Number.isInteger(caseId)) {
+      throw new Error(`Row ${i + 1}: case_id must be an integer.`);
+    }
+    if (!Number.isFinite(cl)) {
+      throw new Error(`Row ${i + 1}: cl must be numeric.`);
+    }
+    if (!Number.isFinite(cd)) {
+      throw new Error(`Row ${i + 1}: cd must be numeric.`);
+    }
+    if (!expectedCaseIds.has(caseId)) {
+      throw new Error(`Row ${i + 1}: unknown case_id ${caseId}.`);
+    }
+    if (seenCaseIds.has(caseId)) {
+      throw new Error(`Row ${i + 1}: duplicate case_id ${caseId}.`);
+    }
+
+    seenCaseIds.add(caseId);
+    parsed.push({ case_id: caseId, cl, cd });
+  }
+
+  if (parsed.length !== expectedCaseIds.size) {
+    throw new Error(
+      `CSV must have exactly ${expectedCaseIds.size} prediction rows (one per case_id).`
+    );
+  }
+
+  return parsed;
+}
+
+function applyPredictionsToInputs(predictions) {
+  const byCase = new Map(predictions.map((p) => [p.case_id, p]));
+  const inputs = els.casesBody.querySelectorAll("input[data-case-id]");
+
+  for (const input of inputs) {
+    const caseId = Number(input.dataset.caseId);
+    const key = input.dataset.key;
+    const prediction = byCase.get(caseId);
+    if (!prediction) {
+      throw new Error(`Missing prediction for case_id ${caseId}.`);
+    }
+    input.value = prediction[key];
+  }
+}
+
+async function handlePredictionFileChange(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) {
+    setFileStatus("No file loaded.");
+    return;
+  }
+
+  if (!currentCases.length) {
+    setFileStatus("Cases are not loaded yet. Refresh and try again.", "error");
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const predictions = parsePredictionCsv(text);
+    applyPredictionsToInputs(predictions);
+    setFileStatus(`Loaded ${predictions.length} predictions from ${file.name}.`, "ok");
+  } catch (err) {
+    setFileStatus(String(err.message || err), "error");
+    event.target.value = "";
+  }
+}
+
 async function submitPredictions(event) {
   event.preventDefault();
   els.submitBtn.disabled = true;
@@ -238,6 +449,7 @@ async function boot() {
   try {
     await loadCases();
     await loadLeaderboard();
+    setFileStatus("No file loaded.");
   } catch (err) {
     enableDemoMode(String(err.message || err));
   }
@@ -253,9 +465,15 @@ els.refreshBtn.addEventListener("click", async () => {
   try {
     await loadCases();
     await loadLeaderboard();
+    setFileStatus("No file loaded.");
+    els.predictionFile.value = "";
   } catch (err) {
     enableDemoMode(String(err.message || err));
   }
 });
+
+els.downloadInputsBtn.addEventListener("click", downloadInputsCsv);
+els.downloadTemplateBtn.addEventListener("click", downloadTemplateCsv);
+els.predictionFile.addEventListener("change", handlePredictionFileChange);
 
 boot();
