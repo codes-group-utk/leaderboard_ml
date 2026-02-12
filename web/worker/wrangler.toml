@@ -14,4 +14,4 @@ CORS_ORIGIN = "*"
 [[d1_databases]]
 binding = "DB"
 database_name = "leaderboard"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "d66dcb66-5e40-424f-95c8-008c4335df97"
