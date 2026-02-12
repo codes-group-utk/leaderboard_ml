@@ -1,0 +1,40 @@
+name: Daily Benchmark Publish
+
+on:
+  schedule:
+    - cron: '7 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-and-publish:
+    # Use a self-hosted runner where ADflow is installed/configured.
+    runs-on: [self-hosted, adflow]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install publish dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run 10 random benchmark cases
+        run: |
+          python driver.py --num-cases 10 --batch-size 10 --output-csv data/daily_cases.csv
+
+      - name: Publish to leaderboard backend
+        env:
+          LEADERBOARD_API_BASE: ${{ secrets.LEADERBOARD_API_BASE }}
+          LEADERBOARD_ADMIN_TOKEN: ${{ secrets.LEADERBOARD_ADMIN_TOKEN }}
+        run: |
+          python post_process_and_benchmark/publish_daily_cases.py \
+            --csv data/daily_cases.csv \
+            --api-base "$LEADERBOARD_API_BASE" \
+            --admin-token "$LEADERBOARD_ADMIN_TOKEN" \
+            --date "$(date -u +%F)"

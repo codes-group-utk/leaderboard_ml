@@ -1,0 +1,47 @@
+# ------------------------------
+# Web-only repo: keep local CFD assets out of Git
+# ------------------------------
+
+# Heavy/local simulation stacks
+adflow/
+GRID/
+simulation/
+data/
+driver.py
+
+# Keep only the publish utility from this folder
+post_process_and_benchmark/*
+!post_process_and_benchmark/publish_daily_cases.py
+
+# Python cache/artifacts
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+
+# Runtime artifacts
+*.log
+*.tmp
+*.pkl
+
+# Environments/secrets
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Editor/OS clutter
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Worker local state/deps
+web/worker/node_modules/
+web/worker/.wrangler/

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Airfoil Daily Benchmark</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Airfoil Daily Benchmark Leaderboard</h1>
+      <p class="lead">
+        Submit CL/CD predictions for today's 10 cases. Name and email are required.
+        Date: <strong id="date-label">-</strong>
+      </p>
+
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <h2 style="margin:0;font-size:1.15rem;">Today's Cases</h2>
+          <button id="refresh-btn" class="secondary" type="button">Refresh</button>
+        </div>
+        <p id="status" class="status">Loading...</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Airfoil</th>
+              <th>Mach</th>
+              <th>Re</th>
+              <th>AoA</th>
+              <th>Coordinates</th>
+              <th>Your CL/CD</th>
+            </tr>
+          </thead>
+          <tbody id="cases-body"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0;font-size:1.15rem;">Submit Prediction</h2>
+        <form id="submission-form">
+          <div class="row">
+            <div class="field">
+              <label for="name">Name *</label>
+              <input id="name" name="name" type="text" required />
+            </div>
+            <div class="field">
+              <label for="email">Email *</label>
+              <input id="email" name="email" type="email" required />
+            </div>
+            <div class="field">
+              <label for="group">Group</label>
+              <input id="group" name="group" type="text" />
+            </div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+            <button id="submit-btn" type="submit">Submit</button>
+            <small>One submission per email per day.</small>
+          </div>
+        </form>
+        <p id="result" class="status" style="margin-top:12px;">Awaiting submission.</p>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0;font-size:1.15rem;">Leaderboard</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Group</th>
+              <th>Score</th>
+              <th>Correct Cases</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="board-body"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

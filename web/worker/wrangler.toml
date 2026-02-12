@@ -1,0 +1,17 @@
+name = "leaderboard-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[vars]
+# Set this to your GitHub Pages origin in production.
+# Example: "https://your-user.github.io"
+CORS_ORIGIN = "*"
+
+# Set with: wrangler secret put ADMIN_TOKEN
+# ADMIN_TOKEN is used by /api/admin/publish
+
+[[d1_databases]]
+binding = "DB"
+database_name = "leaderboard"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

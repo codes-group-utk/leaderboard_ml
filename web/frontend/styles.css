@@ -1,0 +1,168 @@
+:root {
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --text: #102a43;
+  --muted: #486581;
+  --accent: #0b7285;
+  --accent-soft: #dff3f7;
+  --danger: #c92a2a;
+  --ok: #2b8a3e;
+  --border: #d9e2ec;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 10% 10%, #e7f5ff, var(--bg));
+}
+
+.container {
+  width: min(1100px, 92vw);
+  margin: 28px auto;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 1.9rem;
+}
+
+p.lead {
+  margin: 0 0 22px;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #334e68;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  padding: 8px 6px;
+  vertical-align: top;
+  font-size: 0.93rem;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.84rem;
+}
+
+small {
+  color: var(--muted);
+}
+
+.status {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: #0f3f47;
+}
+
+.status.error {
+  background: #fff5f5;
+  color: var(--danger);
+}
+
+.status.ok {
+  background: #ebfbee;
+  color: var(--ok);
+}
+
+.coords {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 420px;
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+  }
+
+  th {
+    display: none;
+  }
+
+  tr {
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
+  td {
+    border-bottom: 0;
+    padding: 5px 0;
+  }
+}
