@@ -96,3 +96,68 @@ Set repository secrets:
 - Correct case: `CL_rel_err <= 0.03` and `CD_rel_err <= 0.05`
 
 You can tune this directly in `web/worker/src/index.js`.
+
+## Daily Automation (Challenge + End-of-Day Snapshot)
+
+Two scripts are now available:
+
+1. `post_process_and_benchmark/create_daily_challenge.py`
+- Runs random simulations using `driver.py`
+- Publishes the day challenge to API (`/api/admin/publish`)
+- Archives results under `data/daily_challenges/<YYYY-MM-DD>/`
+
+2. `post_process_and_benchmark/fetch_leaderboard_snapshot.py`
+- Fetches leaderboard (`/api/leaderboard`)
+- Saves JSON+CSV snapshot under `data/leaderboard_snapshots/<YYYY-MM-DD>/`
+
+### Manual run commands
+
+```bash
+# Morning challenge generation + publish
+python post_process_and_benchmark/create_daily_challenge.py \
+  --api-base "$LEADERBOARD_API_BASE" \
+  --admin-token "$LEADERBOARD_ADMIN_TOKEN" \
+  --date "$(date -u +%F)" \
+  --num-cases 10 \
+  --batch-size 10
+
+# End-of-day leaderboard snapshot
+python post_process_and_benchmark/fetch_leaderboard_snapshot.py \
+  --api-base "$LEADERBOARD_API_BASE" \
+  --date "$(date -u +%F)" \
+  --out-dir data/leaderboard_snapshots
+```
+
+### What must be configured
+
+- Repository secrets for workflow mode:
+  - `LEADERBOARD_API_BASE`
+  - `LEADERBOARD_ADMIN_TOKEN`
+- A self-hosted GitHub runner with label `adflow` must be online.
+- `driver.py` and simulation assets (`GRID`, `simulation`, etc.) must be available on the runner checkout path.
+
+If you intentionally keep simulation assets untracked in Git, run the above scripts via local cron/systemd on your machine instead of GitHub-hosted checkout.
+
+### Optional repository variables (for untracked local simulation assets)
+
+If `driver.py`, `GRID`, and `simulation` are not committed to GitHub,
+set these **Repository Variables** (`Settings -> Secrets and variables -> Actions -> Variables`):
+
+- `LEADERBOARD_LOCAL_REPO_ROOT`
+  - Absolute path on runner machine containing your full local assets.
+  - Example: `/home/rohit/Desktop/leaderboard_ml`
+- `LEADERBOARD_SNAPSHOT_DIR` (optional)
+  - Absolute path for end-of-day snapshots.
+  - Example: `/home/rohit/Desktop/leaderboard_ml/data/leaderboard_snapshots`
+
+### Local cron alternative (no GitHub runner needed)
+
+If your PC stays on 24/7, you can schedule both jobs directly via `crontab -e`:
+
+```cron
+# Daily challenge generation/publish at 13:07 UTC
+7 13 * * * cd /home/rohit/Desktop/leaderboard_ml && LEADERBOARD_ADMIN_TOKEN="<TOKEN>" python post_process_and_benchmark/create_daily_challenge.py --api-base "https://leaderboard-api.airfoil-leaderboard.workers.dev" --date "$(date -u +\%F)" --repo-root /home/rohit/Desktop/leaderboard_ml >> data/cron_create.log 2>&1
+
+# End-of-day leaderboard snapshot at 23:59 UTC
+59 23 * * * cd /home/rohit/Desktop/leaderboard_ml && python post_process_and_benchmark/fetch_leaderboard_snapshot.py --api-base "https://leaderboard-api.airfoil-leaderboard.workers.dev" --date "$(date -u +\%F)" --out-dir /home/rohit/Desktop/leaderboard_ml/data/leaderboard_snapshots >> data/cron_snapshot.log 2>&1
+```

@@ -19,22 +19,32 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install publish dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Run 10 random benchmark cases
-        run: |
-          python driver.py --num-cases 10 --batch-size 10 --output-csv data/daily_cases.csv
-
-      - name: Publish to leaderboard backend
+      - name: Run daily challenge generation + publish
         env:
           LEADERBOARD_API_BASE: ${{ secrets.LEADERBOARD_API_BASE }}
           LEADERBOARD_ADMIN_TOKEN: ${{ secrets.LEADERBOARD_ADMIN_TOKEN }}
+          LEADERBOARD_LOCAL_REPO_ROOT: ${{ vars.LEADERBOARD_LOCAL_REPO_ROOT }}
         run: |
-          python post_process_and_benchmark/publish_daily_cases.py \
-            --csv data/daily_cases.csv \
+          REPO_ROOT="${LEADERBOARD_LOCAL_REPO_ROOT:-$GITHUB_WORKSPACE}"
+          python post_process_and_benchmark/create_daily_challenge.py \
             --api-base "$LEADERBOARD_API_BASE" \
             --admin-token "$LEADERBOARD_ADMIN_TOKEN" \
-            --date "$(date -u +%F)"
+            --repo-root "$REPO_ROOT" \
+            --date "$(date -u +%F)" \
+            --num-cases 10 \
+            --batch-size 10 \
+            --csv "$REPO_ROOT/data/daily_cases.csv"
+
+      - name: Upload daily challenge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-challenge-${{ github.run_id }}
+          path: |
+            data/daily_cases.csv
+            data/daily_challenges
+          if-no-files-found: warn

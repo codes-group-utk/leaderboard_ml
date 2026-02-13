@@ -12,6 +12,8 @@ driver.py
 # Keep only the publish utility from this folder
 post_process_and_benchmark/*
 !post_process_and_benchmark/publish_daily_cases.py
+!post_process_and_benchmark/create_daily_challenge.py
+!post_process_and_benchmark/fetch_leaderboard_snapshot.py
 
 # Python cache/artifacts
 __pycache__/

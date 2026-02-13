@@ -1,0 +1,43 @@
+name: Daily Leaderboard Snapshot
+
+on:
+  schedule:
+    # End-of-day snapshot (UTC). Adjust to your preferred timezone cutoff.
+    - cron: '59 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: [self-hosted, adflow]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Fetch and save leaderboard snapshot
+        env:
+          LEADERBOARD_API_BASE: ${{ secrets.LEADERBOARD_API_BASE }}
+          LEADERBOARD_SNAPSHOT_DIR: ${{ vars.LEADERBOARD_SNAPSHOT_DIR }}
+        run: |
+          SNAP_DIR="${LEADERBOARD_SNAPSHOT_DIR:-$GITHUB_WORKSPACE/data/leaderboard_snapshots}"
+          python post_process_and_benchmark/fetch_leaderboard_snapshot.py \
+            --api-base "$LEADERBOARD_API_BASE" \
+            --date "$(date -u +%F)" \
+            --out-dir "$SNAP_DIR"
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: leaderboard-snapshot-${{ github.run_id }}
+          path: data/leaderboard_snapshots
+          if-no-files-found: warn
