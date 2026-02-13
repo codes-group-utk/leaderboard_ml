@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Publish daily benchmark cases to the worker admin endpoint.
+"""Publish benchmark cases to the worker admin endpoint.
 
 Reads driver.py output CSV and posts hidden CL/CD + public inputs.
 """
+
+from __future__ import annotations
 
 import argparse
 import csv
@@ -52,9 +54,19 @@ def load_cases(csv_path: Path) -> list[dict]:
     return cases
 
 
-def publish(api_base: str, admin_token: str, date: str, cases: list[dict]) -> dict:
+def publish(
+    api_base: str,
+    admin_token: str,
+    date: str,
+    cases: list[dict],
+    reset_submissions: bool = False,
+) -> dict:
     url = api_base.rstrip("/") + "/api/admin/publish"
-    payload = {"date": date, "cases": cases}
+    payload = {
+        "date": date,
+        "cases": cases,
+        "reset_submissions": reset_submissions,
+    }
     headers = {
         "Authorization": f"Bearer {admin_token}",
         "Content-Type": "application/json",
@@ -73,16 +85,27 @@ def publish(api_base: str, admin_token: str, date: str, cases: list[dict]) -> di
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Publish daily cases to leaderboard API.")
+    parser = argparse.ArgumentParser(description="Publish benchmark cases to leaderboard API.")
     parser.add_argument("--csv", required=True, help="Path to driver output CSV")
     parser.add_argument("--api-base", required=True, help="Worker base URL, e.g. https://x.workers.dev")
     parser.add_argument("--admin-token", required=True, help="Admin token for publish endpoint")
     parser.add_argument("--date", default=default_date(), help="Date in YYYY-MM-DD (UTC by default)")
+    parser.add_argument(
+        "--reset-submissions",
+        action="store_true",
+        help="Delete existing submissions for this date before publishing new cases.",
+    )
     args = parser.parse_args()
 
     csv_path = Path(args.csv).resolve()
     cases = load_cases(csv_path)
-    result = publish(args.api_base, args.admin_token, args.date, cases)
+    result = publish(
+        args.api_base,
+        args.admin_token,
+        args.date,
+        cases,
+        reset_submissions=args.reset_submissions,
+    )
     print(json.dumps(result, indent=2))
 
 

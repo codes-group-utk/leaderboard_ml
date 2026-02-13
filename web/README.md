@@ -161,3 +161,51 @@ If your PC stays on 24/7, you can schedule both jobs directly via `crontab -e`:
 # End-of-day leaderboard snapshot at 23:59 UTC
 59 23 * * * cd /home/rohit/Desktop/leaderboard_ml && python post_process_and_benchmark/fetch_leaderboard_snapshot.py --api-base "https://leaderboard-api.airfoil-leaderboard.workers.dev" --date "$(date -u +\%F)" --out-dir /home/rohit/Desktop/leaderboard_ml/data/leaderboard_snapshots >> data/cron_snapshot.log 2>&1
 ```
+
+### Continuous rotation loop (every X hours/minutes)
+
+Use this when you want fully unattended end-to-end updates on an always-on machine.
+
+Script:
+- `post_process_and_benchmark/run_challenge_loop.py`
+
+What each cycle does:
+1. Pull leaderboard from website API and save snapshot locally (`pre_publish`).
+2. Reset current date submissions (default) and publish new random simulation challenge.
+3. Pull leaderboard again and save (`post_publish`).
+4. Sleep for the configured interval and repeat.
+
+Examples:
+
+```bash
+# Test mode: rotate every 5 minutes forever
+LEADERBOARD_ADMIN_TOKEN="<TOKEN>" \
+python post_process_and_benchmark/run_challenge_loop.py \
+  --api-base "https://leaderboard-api.airfoil-leaderboard.workers.dev" \
+  --repo-root "/home/rohit/Desktop/leaderboard_ml" \
+  --interval 5m \
+  --num-cases 10 \
+  --batch-size 10 \
+  --date-mode fixed \
+  --fixed-date "$(date -u +%F)"
+
+# Production style: rotate once every 24 hours
+LEADERBOARD_ADMIN_TOKEN="<TOKEN>" \
+python post_process_and_benchmark/run_challenge_loop.py \
+  --api-base "https://leaderboard-api.airfoil-leaderboard.workers.dev" \
+  --repo-root "/home/rohit/Desktop/leaderboard_ml" \
+  --interval 24h
+```
+
+To keep it running after logout:
+
+```bash
+nohup env LEADERBOARD_ADMIN_TOKEN="<TOKEN>" \
+python post_process_and_benchmark/run_challenge_loop.py \
+  --api-base "https://leaderboard-api.airfoil-leaderboard.workers.dev" \
+  --repo-root "/home/rohit/Desktop/leaderboard_ml" \
+  --interval 5m \
+  --date-mode fixed \
+  --fixed-date "$(date -u +%F)" \
+  > data/loop_runner.log 2>&1 &
+```

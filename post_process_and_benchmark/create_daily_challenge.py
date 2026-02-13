@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run daily random simulations and publish today's challenge to the API."""
+"""Run random simulations and publish challenge cases to the API."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Reuse the publish utility you already have.
+# Reuse publish helpers.
 from publish_daily_cases import load_cases, publish
 
 
@@ -37,7 +37,7 @@ def run_driver(repo_root: Path, output_csv: Path, num_cases: int, batch_size: in
     if seed is not None:
         cmd.extend(["--seed", str(seed)])
 
-    print("Running daily simulation batch...")
+    print("Running simulation batch...")
     print("Command:", " ".join(cmd))
     subprocess.run(cmd, cwd=repo_root, check=True)
 
@@ -57,7 +57,7 @@ def archive_outputs(data_root: Path, date: str, csv_path: Path, publish_result: 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Create daily challenge: random sims + publish to leaderboard API"
+        description="Create challenge: random sims + publish to leaderboard API"
     )
     parser.add_argument("--api-base", required=True, help="Worker base URL, e.g. https://x.workers.dev")
     parser.add_argument(
@@ -84,6 +84,11 @@ def main() -> None:
         action="store_true",
         help="Skip running driver.py and only publish an existing CSV",
     )
+    parser.add_argument(
+        "--reset-submissions",
+        action="store_true",
+        help="Delete existing submissions for this date before publishing new cases.",
+    )
     args = parser.parse_args()
 
     if not args.admin_token:
@@ -103,11 +108,17 @@ def main() -> None:
         raise SystemExit(f"--skip-sim was used but CSV does not exist: {csv_path}")
 
     cases = load_cases(csv_path)
-    publish_result = publish(args.api_base, args.admin_token, args.date, cases)
+    publish_result = publish(
+        args.api_base,
+        args.admin_token,
+        args.date,
+        cases,
+        reset_submissions=args.reset_submissions,
+    )
 
     out_dir = archive_outputs(data_root, args.date, csv_path, publish_result)
     print(json.dumps(publish_result, indent=2))
-    print(f"Archived daily challenge data under: {out_dir}")
+    print(f"Archived challenge data under: {out_dir}")
 
 
 if __name__ == "__main__":

@@ -259,11 +259,15 @@ async function handleAdminPublish(request, env, corsOrigin) {
 
   const date = (body.date || "").trim();
   const cases = Array.isArray(body.cases) ? body.cases : [];
+  const resetSubmissions = Boolean(body.reset_submissions);
   if (!date) return jsonResponse({ error: "date is required." }, 400, corsOrigin);
   if (cases.length === 0) return jsonResponse({ error: "cases must be non-empty." }, 400, corsOrigin);
 
   const statements = [];
   statements.push(env.DB.prepare("DELETE FROM daily_cases WHERE date = ?").bind(date));
+  if (resetSubmissions) {
+    statements.push(env.DB.prepare("DELETE FROM submissions WHERE date = ?").bind(date));
+  }
 
   for (const c of cases) {
     const caseId = toNumber(c.case_id, "case_id");
@@ -296,6 +300,7 @@ async function handleAdminPublish(request, env, corsOrigin) {
       message: "Published daily benchmark cases.",
       date,
       cases_published: cases.length,
+      reset_submissions: resetSubmissions,
     },
     200,
     corsOrigin
