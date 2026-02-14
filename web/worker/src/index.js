@@ -34,7 +34,6 @@ function scoreCase(predCl, predCd, trueCl, trueCd) {
   const cdRelErr = Math.abs(predCd - trueCd) / Math.max(Math.abs(trueCd), 1e-4);
   const err = clRelErr + cdRelErr;
 
-  // 0..100 per case, tunable later.
   const points = Math.max(0, 100 - 50 * err);
   const isCorrect = clRelErr <= 0.03 && cdRelErr <= 0.05;
 
@@ -70,6 +69,25 @@ async function getCasesForDate(db, date) {
   return result.results || [];
 }
 
+function toPublicCases(rows) {
+  return rows.map((row) => ({
+    case_id: row.case_id,
+    airfoil: row.airfoil,
+    mach: row.mach,
+    reynolds: row.reynolds,
+    aoa: row.aoa,
+    coordinates: JSON.parse(row.coordinates_json || "[]"),
+  }));
+}
+
+async function getPublishedAt(db, date) {
+  const row = await db
+    .prepare(`SELECT published_at FROM challenge_publications WHERE date = ? LIMIT 1`)
+    .bind(date)
+    .first();
+  return row ? row.published_at : null;
+}
+
 async function handleGetTodayCases(url, env, corsOrigin) {
   const date = url.searchParams.get("date") || utcDateString();
   const rows = await getCasesForDate(env.DB, date);
@@ -86,16 +104,54 @@ async function handleGetTodayCases(url, env, corsOrigin) {
     );
   }
 
-  const publicCases = rows.map((row) => ({
-    case_id: row.case_id,
-    airfoil: row.airfoil,
-    mach: row.mach,
-    reynolds: row.reynolds,
-    aoa: row.aoa,
-    coordinates: JSON.parse(row.coordinates_json || "[]"),
-  }));
+  const publishedAt = await getPublishedAt(env.DB, date);
+  return jsonResponse({ date, published_at: publishedAt, cases: toPublicCases(rows) }, 200, corsOrigin);
+}
 
-  return jsonResponse({ date, cases: publicCases }, 200, corsOrigin);
+async function handleGetLatestCases(env, corsOrigin) {
+  let latest = await env.DB
+    .prepare(`SELECT date, published_at FROM challenge_publications ORDER BY published_at DESC LIMIT 1`)
+    .first();
+
+  if (!latest || !latest.date) {
+    latest = await env.DB
+      .prepare(`SELECT date FROM daily_cases ORDER BY date DESC LIMIT 1`)
+      .first();
+  }
+
+  if (!latest || !latest.date) {
+    return jsonResponse(
+      {
+        cases: [],
+        message: "No benchmark cases published yet.",
+      },
+      404,
+      corsOrigin
+    );
+  }
+
+  const date = latest.date;
+  const rows = await getCasesForDate(env.DB, date);
+  if (!rows.length) {
+    return jsonResponse(
+      {
+        cases: [],
+        message: "No benchmark cases published yet.",
+      },
+      404,
+      corsOrigin
+    );
+  }
+
+  return jsonResponse(
+    {
+      date,
+      published_at: latest.published_at || null,
+      cases: toPublicCases(rows),
+    },
+    200,
+    corsOrigin
+  );
 }
 
 async function handleSubmit(request, env, corsOrigin) {
@@ -263,7 +319,18 @@ async function handleAdminPublish(request, env, corsOrigin) {
   if (!date) return jsonResponse({ error: "date is required." }, 400, corsOrigin);
   if (cases.length === 0) return jsonResponse({ error: "cases must be non-empty." }, 400, corsOrigin);
 
+  const nowIso = new Date().toISOString();
   const statements = [];
+
+  statements.push(
+    env.DB.prepare(
+      `CREATE TABLE IF NOT EXISTS challenge_publications (
+         date TEXT PRIMARY KEY,
+         published_at TEXT NOT NULL
+       )`
+    )
+  );
+
   statements.push(env.DB.prepare("DELETE FROM daily_cases WHERE date = ?").bind(date));
   if (resetSubmissions) {
     statements.push(env.DB.prepare("DELETE FROM submissions WHERE date = ?").bind(date));
@@ -293,12 +360,23 @@ async function handleAdminPublish(request, env, corsOrigin) {
     );
   }
 
+  statements.push(
+    env.DB
+      .prepare(
+        `INSERT INTO challenge_publications (date, published_at)
+         VALUES (?, ?)
+         ON CONFLICT(date) DO UPDATE SET published_at = excluded.published_at`
+      )
+      .bind(date, nowIso)
+  );
+
   await env.DB.batch(statements);
 
   return jsonResponse(
     {
-      message: "Published daily benchmark cases.",
+      message: "Published benchmark cases.",
       date,
+      published_at: nowIso,
       cases_published: cases.length,
       reset_submissions: resetSubmissions,
     },
@@ -322,6 +400,10 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/api/cases/today") {
       return handleGetTodayCases(url, env, corsOrigin);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/cases/latest") {
+      return handleGetLatestCases(env, corsOrigin);
     }
 
     if (request.method === "POST" && url.pathname === "/api/submissions") {

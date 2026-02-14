@@ -20,6 +20,7 @@ const els = {
 };
 
 let currentDate = null;
+let currentPublishedAt = null;
 let currentCases = [];
 let demoMode = false;
 
@@ -31,6 +32,24 @@ function setStatus(message, kind = "") {
 function setFileStatus(message, kind = "") {
   els.fileStatus.className = `status ${kind}`.trim();
   els.fileStatus.textContent = message;
+}
+
+function setDateLabel() {
+  if (!currentDate) {
+    els.dateLabel.textContent = "-";
+    return;
+  }
+
+  if (!currentPublishedAt) {
+    els.dateLabel.textContent = currentDate;
+    return;
+  }
+
+  const published = new Date(currentPublishedAt);
+  const publishedText = Number.isNaN(published.getTime())
+    ? currentPublishedAt
+    : published.toLocaleString();
+  els.dateLabel.textContent = `${currentDate} (published ${publishedText})`;
 }
 
 function fmtNum(v, digits = 6) {
@@ -67,15 +86,30 @@ function buildDemoCases() {
 function enableDemoMode(reason = "") {
   demoMode = true;
   currentDate = todayIsoDate();
+  currentPublishedAt = null;
   currentCases = buildDemoCases();
-  els.dateLabel.textContent = currentDate;
+  setDateLabel();
   renderCases(currentCases);
   renderBoard([]);
 
   const reasonMsg = reason ? ` (${reason})` : "";
-  setStatus(`Backend API is not connected. Showing local demo data${reasonMsg}.`, "error");
+  setStatus(`Using local demo data${reasonMsg}.`, "error");
   els.result.className = "status";
   els.result.textContent = "Demo mode active: submissions are disabled until API is configured.";
+  setFileStatus("No file loaded.");
+}
+
+function showWaitingForPublish(message = "No challenge has been published yet. Waiting for next push.") {
+  demoMode = false;
+  currentDate = null;
+  currentPublishedAt = null;
+  currentCases = [];
+  setDateLabel();
+  els.casesBody.innerHTML = "";
+  renderBoard([]);
+  setStatus(message, "error");
+  els.result.className = "status";
+  els.result.textContent = "Awaiting first published challenge.";
   setFileStatus("No file loaded.");
 }
 
@@ -139,8 +173,8 @@ function renderBoard(entries) {
 }
 
 async function loadCases() {
-  setStatus("Loading today's benchmark cases...");
-  const res = await fetch(`${apiBase}/cases/today`);
+  setStatus("Loading latest published challenge...");
+  const res = await fetch(`${apiBase}/cases/latest`);
   const data = await res.json();
 
   if (!res.ok) {
@@ -148,22 +182,22 @@ async function loadCases() {
   }
 
   currentDate = data.date;
+  currentPublishedAt = data.published_at || null;
   currentCases = data.cases;
-  els.dateLabel.textContent = currentDate;
+  setDateLabel();
   renderCases(currentCases);
-  setStatus(`Loaded ${currentCases.length} cases for ${currentDate}.`, "ok");
+
+  const publishNote = currentPublishedAt ? ` | published: ${new Date(currentPublishedAt).toLocaleString()}` : "";
+  setStatus(`Loaded ${currentCases.length} cases from latest push (${currentDate})${publishNote}.`, "ok");
 }
 
 async function loadLeaderboard() {
-  if (demoMode) {
+  if (demoMode || !currentDate) {
     renderBoard([]);
     return;
   }
 
-  const url = currentDate
-    ? `${apiBase}/leaderboard?date=${encodeURIComponent(currentDate)}&limit=20`
-    : `${apiBase}/leaderboard?limit=20`;
-
+  const url = `${apiBase}/leaderboard?date=${encodeURIComponent(currentDate)}&limit=20`;
   const res = await fetch(url);
   const data = await res.json();
   if (!res.ok) {
@@ -222,9 +256,7 @@ function downloadInputsCsv() {
     return;
   }
 
-  const rows = [
-    ["date", "case_id", "airfoil", "mach", "reynolds", "aoa", "coordinates_json"],
-  ];
+  const rows = [["date", "case_id", "airfoil", "mach", "reynolds", "aoa", "coordinates_json"]];
 
   for (const c of currentCases) {
     rows.push([
@@ -349,9 +381,7 @@ function parsePredictionCsv(text) {
   }
 
   if (parsed.length !== expectedCaseIds.size) {
-    throw new Error(
-      `CSV must have exactly ${expectedCaseIds.size} prediction rows (one per case_id).`
-    );
+    throw new Error(`CSV must have exactly ${expectedCaseIds.size} prediction rows (one per case_id).`);
   }
 
   return parsed;
@@ -405,8 +435,8 @@ async function submitPredictions(event) {
       throw new Error("Demo mode active. Connect API first to enable submissions.");
     }
 
-    if (!currentCases.length) {
-      throw new Error("No active cases loaded.");
+    if (!currentCases.length || !currentDate) {
+      throw new Error("No active challenge loaded.");
     }
 
     const payload = {
@@ -451,7 +481,12 @@ async function boot() {
     await loadLeaderboard();
     setFileStatus("No file loaded.");
   } catch (err) {
-    enableDemoMode(String(err.message || err));
+    const msg = String(err.message || err);
+    if (msg.toLowerCase().includes("no benchmark cases published")) {
+      showWaitingForPublish();
+    } else {
+      enableDemoMode(msg);
+    }
   }
 }
 
@@ -468,7 +503,12 @@ els.refreshBtn.addEventListener("click", async () => {
     setFileStatus("No file loaded.");
     els.predictionFile.value = "";
   } catch (err) {
-    enableDemoMode(String(err.message || err));
+    const msg = String(err.message || err);
+    if (msg.toLowerCase().includes("no benchmark cases published")) {
+      showWaitingForPublish();
+    } else {
+      enableDemoMode(msg);
+    }
   }
 });
 
