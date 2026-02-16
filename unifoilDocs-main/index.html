@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="UniFoil: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows - Rohit Sunil Kanchi, Benjamin Melanson, Nithin Somasekharan, Shaowu Pan, Sicheng He">
+  <meta name="description" content="We present UniFoil, the largest publicly available universal airfoil dataset based on Reynolds-averaged-Navier–Stokes (RANS) simulations. It contains over 500,000 samples spanning a wide range of Reynolds numbers, Mach numbers, capturing both transitional and fully turbulent flows across incompressible to compressible regimes. UniFoil is designed to support machine learning (ML) research in fluid dynamics, particularly for modeling complex aerodynamic phenomena. Most existing datasets are limited to incompressible, fully turbulent flows with smooth field characteristics, thus overlooking the critical physics of laminar–turbulent transition and shock-wave interactions-features that exhibit strong nonlinearity and sharp gradients. UniFoil fills this gap by offering a broad spectrum of realistic flow conditions. Turbulent simulations utilize the Spalart–Allmaras (SA) model, while transitional flows are modeled using an eN -based transition prediction method coupled with the SA model. The dataset includes a comprehensive geometry set comprising over 4,800 natural laminar flow (NLF) airfoils and 30,000 fully turbulent (FT) airfoils, effectively covering the diversity of airfoil designs relevant to aerospace, wind energy, and marine applications. This dataset is also highly valuable for scientific machine learning (SciML), enabling the development of data-driven models that more accurately capture the transport processes associated with laminar–turbulent transition. UniFoil is freely available under a permissive CC-BY-SA license.">
+  <meta name="keywords" content="fluid dynamics, data analysis, statistics and probability, machine learning">
+  <meta name="author" content="Rohit Sunil Kanchi, Benjamin Melanson, Nithin Somasekharan, Shaowu Pan, Sicheng He">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  
+
+  <!-- Academic/Research Specific -->
+  <meta name="citation_title" content="UniFoil: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows">
+  <meta name="citation_author" content="Kanchi, Rohit">
+  <meta name="citation_author" content="Melanson, Benjamin">
+  <meta name="citation_author" content="Somasekharan, Nithin">
+  <meta name="citation_author" content="Pan, Shaowu">
+  <meta name="citation_author" content="He, Sicheng">
+  <meta name="citation_publication_date" content="2025">
+  <meta name="citation_conference_title" content="NeurIPS 2025">
+  <meta name="citation_pdf_url" content="https://arxiv.org/pdf/2505.21124">
+  
+  <!-- Additional SEO -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="msapplication-TileColor" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ajax.googleapis.com">
+  <link rel="preconnect" href="https://documentcloud.adobe.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+  <title>UniFoil: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows</title>
+  
+  <!-- Favicon and App Icons -->
+  <link rel="icon" type="image/x-icon" href="docs/source/logo.svg">
+  <link rel="apple-touch-icon" href="docs/source/logo.svg">
+  
+  <!-- Critical CSS - Load synchronously -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="stylesheet" href="static/css/leaderboard.css">
+  
+  <!-- Non-critical CSS - Load asynchronously -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  <!-- Fallback for browsers that don't support preload -->
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+  
+  <!-- Fonts - Optimized loading -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Defer non-critical JavaScript -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+  
+  <!-- Structured Data for Academic Papers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "UniFoi: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows",
+    "description": "We present UniFoil, the largest publicly available universal airfoil dataset based on Reynolds-averaged-Navier–Stokes (RANS) simulations. It contains over 500,000 samples spanning a wide range of Reynolds numbers, Mach numbers, capturing both transitional and fully turbulent flows across incompressible to compressible regimes. UniFoil is designed to support machine learning (ML) research in fluid dynamics, particularly for modeling complex aerodynamic phenomena. Most existing datasets are limited to incompressible, fully turbulent flows with smooth field characteristics, thus overlooking the critical physics of laminar–turbulent transition and shock-wave interactions-features that exhibit strong nonlinearity and sharp gradients. UniFoil fills this gap by offering a broad spectrum of realistic flow conditions. Turbulent simulations utilize the Spalart–Allmaras (SA) model, while transitional flows are modeled using an eN -based transition prediction method coupled with the SA model. The dataset includes a comprehensive geometry set comprising over 4,800 natural laminar flow (NLF) airfoils and 30,000 fully turbulent (FT) airfoils, effectively covering the diversity of airfoil designs relevant to aerospace, wind energy, and marine applications. This dataset is also highly valuable for scientific machine learning (SciML), enabling the development of data-driven models that more accurately capture the transport processes associated with laminar–turbulent transition. UniFoil is freely available under a permissive CC-BY-SA license.",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Rohit Sunil Kanchi",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "University of Tennessee, Knoxville"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Benjamin Melanson",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "University of Tennessee, Knoxville"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Nithin Somasekharan",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "Rensselaer Polytechnic Institute"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Shaowu Pan",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "Rensselaer Polytechnic Institute"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Sicheng He",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "University of Tennessee, Knoxville"
+        }
+      }
+    ],
+    "datePublished": "2025-01-01",
+    "publisher": {
+      "@type": "Organization",
+      "name": "NeurIPS"
+    },
+    "url": "https://benjaminmelanson.github.io/unifoilDocs/",
+    "image": "docs/source/logo.svg",
+    "keywords": ["fluid dynamics", "data analysis", "statistics and probability", "machine learning"],
+    "abstract": "We present UniFoil, the largest publicly available universal airfoil dataset based on Reynolds-averaged-Navier–Stokes (RANS) simulations. It contains over 500,000 samples spanning a wide range of Reynolds numbers, Mach numbers, capturing both transitional and fully turbulent flows across incompressible to compressible regimes. UniFoil is designed to support machine learning (ML) research in fluid dynamics, particularly for modeling complex aerodynamic phenomena. Most existing datasets are limited to incompressible, fully turbulent flows with smooth field characteristics, thus overlooking the critical physics of laminar–turbulent transition and shock-wave interactions-features that exhibit strong nonlinearity and sharp gradients. UniFoil fills this gap by offering a broad spectrum of realistic flow conditions. Turbulent simulations utilize the Spalart–Allmaras (SA) model, while transitional flows are modeled using an eN -based transition prediction method coupled with the SA model. The dataset includes a comprehensive geometry set comprising over 4,800 natural laminar flow (NLF) airfoils and 30,000 fully turbulent (FT) airfoils, effectively covering the diversity of airfoil designs relevant to aerospace, wind energy, and marine applications. This dataset is also highly valuable for scientific machine learning (SciML), enabling the development of data-driven models that more accurately capture the transport processes associated with laminar–turbulent transition. UniFoil is freely available under a permissive CC-BY-SA license.",
+    "citation": "@article{kanchi2025unifoiluniversaldatasetairfoils,
+      title={UniFoil: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows}, 
+      author={Rohit Sunil Kanchi and Benjamin Melanson and Nithin Somasekharan and Shaowu Pan and Sicheng He},
+      year={2025},
+      eprint={2505.21124},
+      archivePrefix={arXiv},
+      primaryClass={physics.flu-dyn},
+      url={https://arxiv.org/abs/2505.21124}, } ",
+    "isAccessibleForFree": true,
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "mainEntity": {
+      "@type": "WebPage",
+      "@id": "https://benjaminmelanson.github.io/unifoilDocs/"
+    },
+  }
+  </script>
+  
+  <!-- Website/Organization Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "University of Tennessee, Knoxville",
+    "url": "https://www.utk.edu/",
+    "logo": "docs/source/logo.svg",
+  }
+  </script>
+</head>
+<body>
+
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <main id="main-content">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">UniFoil: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://www.linkedin.com/in/rohit-kanchi-7190b0190/" target="_blank">Rohit Sunil Kanchi</a><sup>*</sup>,</span>
+                <span class="author-block">
+                  <a href="http://benmelanson.com/" target="_blank">Benjamin Melanson</a>,</span>
+                  <span class="author-block">
+                    <a href="" target="_blank">Nithin Somasekharan</a>,</span>
+                    <span class="author-block">
+                      <a href="" target="_blank">Shaowu Pan</a>,</span>
+                      <span class="author-block">
+                        <a href="https://sichenghe.github.io/" target="_blank">Sicheng He</a>
+                  </span>
+                  </div>
+
+                  <div class="is-size-5 publication-authors">
+                    <span class="author-block">University of Tennessee, Knoxville<br>NeurIPS 2025</span>
+                    <span class="primaryAuthor"><small><br><sup>*</sup>Corresponding author.</small></span>
+                  </div>
+
+                  <div class="column has-text-centered">
+                    <div class="publication-links">
+                      <span class="link-block">
+                        <a href="https://arxiv.org/pdf/2505.21124" target="_blank"
+                        class="external-link button is-normal is-rounded is-dark">
+                        <span class="icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </span>
+                        <span>Paper</span>
+                      </a>
+                    </span>
+
+                     <span class="link-block">
+                        <a href="https://arxiv.org/abs/2505.21124" target="_blank"
+                        class="external-link button is-normal is-rounded is-dark">
+                        <span class="icon">
+                          <i class="ai ai-arxiv"></i>
+                        </span>
+                        <span>ArXiv</span>
+                      </a>
+                    </span>
+
+                    <span class="link-block">
+                      <a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VQGWC4" target="_blank"
+                      class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon">
+                        <i class="fas fa-database"></i>
+                      </span>
+                      <span>Dataset</span>
+                    </a>
+                  </span>
+
+                    <span class="link-block">
+                      <a href="https://github.com/rohitroxkp7/UniFoil" target="_blank"
+                      class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon">
+                        <i class="fab fa-github"></i>
+                      </span>
+                      <span>Code</span>
+                    </a>
+                  </span>
+                      
+                  <span class="link-block">
+                    <a href="https://unifoildocs.readthedocs.io" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-book"></i>
+                    </span>
+                    <span>Documentation</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="#leaderboard-section"
+                  class="external-link button is-normal is-rounded is-primary">
+                  <span class="icon">
+                    <i class="fas fa-trophy"></i>
+                  </span>
+                  <span>Join the leaderboard now!</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            We present UniFoil, the largest publicly available universal airfoil dataset based on Reynolds-averaged-Navier–Stokes (RANS) simulations. It contains over 500,000 samples spanning a wide range of Reynolds numbers, Mach numbers, capturing both transitional and fully turbulent flows across incompressible to compressible regimes. UniFoil is designed to support machine learning (ML) research in fluid dynamics, particularly for modeling complex aerodynamic phenomena. Most existing datasets are limited to incompressible, fully turbulent flows with smooth field characteristics, thus overlooking the critical physics of laminar–turbulent transition and shock-wave interactions-features that exhibit strong nonlinearity and sharp gradients. UniFoil fills this gap by offering a broad spectrum of realistic flow conditions. Turbulent simulations utilize the Spalart–Allmaras (SA) model, while transitional flows are modeled using an eN -based transition prediction method coupled with the SA model. The dataset includes a comprehensive geometry set comprising over 4,800 natural laminar flow (NLF) airfoils and 30,000 fully turbulent (FT) airfoils, effectively covering the diversity of airfoil designs relevant to aerospace, wind energy, and marine applications. This dataset is also highly valuable for scientific machine learning (SciML), enabling the development of data-driven models that more accurately capture the transport processes associated with laminar–turbulent transition. UniFoil is freely available under a permissive CC-BY-SA license.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+
+<!-- Image carousel -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div class="container">
+          <div id="results-carousel" class="carousel results-carousel">
+            <div class="item">
+              <img src="static/images/Flow_Regimes.png" alt="The flow regimes present in the UniFoil Dataset." loading="lazy"/>
+              <h2 class="subtitle has-text-centered">
+                The flow regimes present in the UniFoil Dataset.
+              </h2>
+            </div>
+            <div class="item">
+              <!-- Your image here -->
+              <img src="static/images/Visualization_1.png" alt="A visualization of the different parameters included in a single data entry." loading="lazy" style = "width: 50%;"/>
+              <h2 class="subtitle has-text-centered">
+                A visualization of the different parameters included in a single data entry.
+              </h2>
+            </div>
+            <div class="item">
+              <!-- Your image here -->
+              <img src="static/images/airfoil256.png" alt="A chart showing all the simulations for the 256th Airfoil." loading="lazy"/>
+              <h2 class="subtitle has-text-centered">
+                A chart showing all the simulations for the 256th Airfoil.
+              </h2>
+            </div>
+            <div class="item">
+              <!-- Your image here -->
+              <img src="static/images/Mapping.png" alt="A visualization of the data wrapping used by the Machine Learning Algorithm. The coordinates of the airfoil on the left are reshaped into the square grid shown on the right." loading="lazy" style = "width: 50%;"/>
+              <h2 class="subtitle has-text-centered">
+                A visualization of the data wrapping used by the Machine Learning Algorithm. The coordinates of the airfoil on the left are reshaped into the square grid shown on the right..
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End image carousel -->
+
+<!-- Paper poster -->
+<section class="hero is-small is-light">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title">Paper</h2>
+      <iframe  src="static/pdfs/unifoilPaper.pdf" width="100%" height="550">
+          </iframe>
+      </div>
+    </div>
+  </section>
+<!--End paper poster -->
+
+
+
+<!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>@article{kanchi2025,
+      title={UniFoil: A Universal Dataset of Airfoils in Transitional and Turbulent Regimes for Subsonic and Transonic Flows}, 
+      author={Rohit Sunil Kanchi and Benjamin Melanson and Nithin Somasekharan and Shaowu Pan and Sicheng He},
+      year={2025},
+      eprint={2505.21124},
+      archivePrefix={arXiv},
+      primaryClass={physics.flu-dyn},
+      url={https://arxiv.org/abs/2505.21124}, }
+      </code></pre>
+    </div>
+</section>
+<!--End BibTex citation -->
+
+
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<section id="leaderboard-section">
+  <div class="lb-container">
+    <h1>Airfoil Daily Benchmark Leaderboard</h1>
+    <p class="lead">
+      Submit CL/CD predictions for today's 10 cases. Name and email are required.
+      Date: <strong id="date-label">-</strong>
+    </p>
+
+    <section class="lb-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <h2 style="margin:0;font-size:1.15rem;">Today's Cases</h2>
+        <div class="btn-group">
+          <button id="download-inputs-btn" type="button">Download Inputs CSV</button>
+          <button id="refresh-btn" class="secondary" type="button">Refresh</button>
+        </div>
+      </div>
+      <p id="status" class="status">Loading...</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Airfoil</th>
+            <th>Mach</th>
+            <th>Re</th>
+            <th>AoA</th>
+            <th>Coordinates</th>
+            <th>Your CL/CD</th>
+          </tr>
+        </thead>
+        <tbody id="cases-body"></tbody>
+      </table>
+    </section>
+
+    <section class="lb-card">
+      <h2 style="margin-top:0;font-size:1.15rem;">Submit Prediction</h2>
+      <form id="submission-form">
+        <div class="upload-tools">
+          <label for="prediction-file">Upload predictions CSV (optional)</label>
+          <div class="btn-group">
+            <input id="prediction-file" type="file" accept=".csv,text/csv" />
+            <button id="download-template-btn" class="secondary small-btn" type="button">
+              Download Template CSV
+            </button>
+          </div>
+          <small>Expected CSV columns: <span class="code">case_id,cl,cd</span></small>
+          <p id="file-status" class="status">No file loaded.</p>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="name">Name *</label>
+            <input id="name" name="name" type="text" required />
+          </div>
+          <div class="field">
+            <label for="email">Email *</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="group">Group</label>
+            <input id="group" name="group" type="text" />
+          </div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+          <button id="submit-btn" type="submit">Submit</button>
+          <small>One submission per email per day.</small>
+        </div>
+      </form>
+      <p id="result" class="status" style="margin-top:12px;">Awaiting submission.</p>
+    </section>
+
+    <section class="lb-card">
+      <h2 style="margin-top:0;font-size:1.15rem;">Leaderboard</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Group</th>
+            <th>Score</th>
+            <th>Correct Cases</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="board-body"></tbody>
+      </table>
+    </section>
+  </div>
+</section>
+
+<script src="static/js/leaderboard_config.js"></script>
+<script src="static/js/leaderboard_app.js"></script>
+
+<!-- Statcounter tracking code -->
+  
+<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+    <!-- End of Statcounter Code -->
+
+  </body>
+  </html>

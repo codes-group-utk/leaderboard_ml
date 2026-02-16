@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'web/frontend/**'
+      - 'unifoilDocs-main/**'
       - '.github/workflows/deploy_pages.yml'
   workflow_dispatch:
 
@@ -30,7 +30,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web/frontend
+          path: unifoilDocs-main
 
       - name: Deploy to GitHub Pages
         id: deployment
